@@ -500,6 +500,37 @@
   .badge-re  { background: #fff; color: #eb0000; border: 1.5px solid #eb0000; }
   .badge-ev  { background: #f07800; color: #fff; }
 
+  /* ── LÄBIGI SIITE: Hüt-/After-Modus + Notfall-Chärtli ── */
+  .huet-panel {
+    margin-top: 18px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(200,168,75,0.45);
+    border-radius: 4px;
+    padding: clamp(12px, 3vw, 18px) clamp(14px, 3.5vw, 22px);
+    backdrop-filter: blur(4px);
+    animation: fadeUp 0.6s 0.55s ease both;
+  }
+  .huet-title { font-family: 'Playfair Display', serif; font-size: clamp(20px, 5vw, 30px); font-weight: 800; color: var(--gold); }
+  .huet-route { color: var(--snow); opacity: 0.92; font-size: clamp(12px, 3vw, 15px); margin-top: 2px; }
+  .huet-jetzgrad { color: var(--snow); opacity: 0.85; font-style: italic; font-size: clamp(11px, 2.8vw, 14px); margin-top: 10px; }
+  .huet-departure { margin-top: 10px; display: inline-block; color: #fff; font-weight: 700; font-size: clamp(12px, 3vw, 15px); background: rgba(200,168,75,0.2); border-radius: 3px; padding: 6px 10px; }
+  .huet-live { display: inline-block; margin-top: 10px; color: var(--gold); border: 1.5px solid var(--gold); border-radius: 2px; padding: 4px 10px; font-size: clamp(10px, 2.5vw, 12px); font-weight: 700; text-decoration: none; letter-spacing: 1px; }
+  .huet-live:hover { background: var(--gold); color: #1a3a2a; }
+  .after-panel { margin-top: 18px; animation: fadeUp 0.6s 0.55s ease both; }
+  .after-title { font-family: 'Playfair Display', serif; font-size: clamp(22px, 5.5vw, 34px); font-weight: 800; color: var(--gold); }
+  .after-count { color: var(--snow); opacity: 0.9; font-size: clamp(12px, 3vw, 15px); margin-top: 4px; }
+  .notfall { margin-top: clamp(28px, 6vw, 40px); border: 1.5px solid var(--sage); border-radius: 4px; overflow: hidden; box-shadow: 0 3px 16px rgba(26,58,42,0.1); }
+  .notfall-header { background: #7a1f1f; color: var(--snow); padding: 9px 16px; font-size: clamp(9px, 2.2vw, 10px); font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; }
+  .notfall-body { background: var(--snow); padding: clamp(12px, 3vw, 18px); }
+  .notfall-numbers { display: flex; flex-wrap: wrap; gap: 8px; }
+  .notfall-num { flex: 1 1 150px; display: flex; flex-direction: column; align-items: center; gap: 2px; text-decoration: none; border: 1.5px solid rgba(122,31,31,0.35); border-radius: 4px; padding: 10px 8px; background: #fff; }
+  .nf-icon { font-size: 18px; }
+  .nf-label { font-size: clamp(9px, 2.2vw, 11px); color: var(--rock); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-align: center; }
+  .nf-val { font-size: clamp(15px, 3.6vw, 19px); font-weight: 800; color: #7a1f1f; }
+  .notfall-bailouts { margin-top: 12px; font-size: clamp(11px, 2.8vw, 13px); color: #333; line-height: 1.55; }
+  .notfall-bailouts .nf-day { margin-top: 4px; }
+  .notfall-hint { margin-top: 12px; font-size: clamp(10px, 2.5vw, 12px); font-weight: 700; color: var(--rock); letter-spacing: 0.5px; }
+
   .travel-desc { flex: 1; min-width: 0; }
   .travel-desc .t-from { font-size: clamp(11px, 2.7vw, 12px); font-weight: 700; color: var(--forest); }
   .travel-desc .t-to   { font-size: clamp(10px, 2.4vw, 11px); color: var(--rock); font-weight: 300; }
@@ -945,7 +976,19 @@
         <div class="countdown-item"><div class="countdown-val" id="cd-mins">--</div><div class="countdown-lbl">Min</div></div>
         <div class="countdown-item"><div class="countdown-val" id="cd-secs">--</div><div class="countdown-lbl">Sek</div></div>
       </div>
-      <a class="cal-link" id="calLink" download="wanderwucheend-2026.ics">📅 Zum Kaländer hinzuefüge</a>
+      <!-- DURING: Hüt-Modus · AFTER: Rückblick (Trip-Zuestandsmaschine) -->
+      <div class="huet-panel" id="huetPanel" style="display:none">
+        <div class="huet-title" id="huetTitle"></div>
+        <div class="huet-route" id="huetRoute"></div>
+        <div class="huet-jetzgrad" id="huetJetzgrad"></div>
+        <div class="huet-departure" id="huetDeparture" style="display:none"></div>
+        <div><a class="huet-live" id="huetLive" target="_blank" rel="noopener" style="display:none">🔎 Jetz live nachluege (SBB)</a></div>
+      </div>
+      <div class="after-panel" id="afterPanel" style="display:none">
+        <div class="after-title">Mir hend's gmacht! 🏔</div>
+        <div class="after-count" id="afterCount"></div>
+      </div>
+      <a class="cal-link" id="calLink" href="wanderwucheend-2026.ics" download="wanderwucheend-2026.ics">📅 Zum Kaländer hinzuefüge</a>
     </div>
   </div>
 
@@ -1083,58 +1126,61 @@
     <!-- VERBINDIG -->
     <div class="travel-section">
 
+      <!-- conn:hifaart:start -->
       <div class="travel-card anim-fadeUp">
         <div class="travel-card-header">🚆 Hifaart — Sa. 26. September</div>
         <div class="travel-card-body">
           <div class="travel-leg">
-            <div class="travel-time">05:12</div>
+            <div class="travel-time" data-conn="hifaart.0.dep">05:12</div>
             <div class="travel-desc"><div class="t-from">Breitenbach, Dorfplatz</div></div>
           </div>
           <div class="travel-leg">
             <div class="travel-time"></div>
-            <span class="travel-line-badge badge-bus">B 115</span>
+            <span class="travel-line-badge badge-bus" data-conn="hifaart.0.line">B 115</span>
             <div class="travel-desc"><div class="t-to">→ Zwinge, Bhf</div></div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">05:24</div>
-            <span class="travel-line-badge badge-s3">S3</span>
+            <div class="travel-time" data-conn="hifaart.1.dep">05:24</div>
+            <span class="travel-line-badge badge-s3" data-conn="hifaart.1.line">S3</span>
             <div class="travel-desc">
               <div class="t-from">Zwinge → Basel SBB</div>
-              <div class="t-to">Gleis 4, Richtig Olte</div>
+              <div class="t-to"><span data-conn="hifaart.1.platform" data-conn-prefix="Gleis ">Gleis 4</span>, Richtig Olte</div>
             </div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">06:06</div>
-            <span class="travel-line-badge badge-ic">IC 3</span>
+            <div class="travel-time" data-conn="hifaart.2.dep">06:06</div>
+            <span class="travel-line-badge badge-ic" data-conn="hifaart.2.line">IC 3</span>
             <div class="travel-desc">
               <div class="t-from">Basel SBB → Cuira</div>
-              <div class="t-to">Gleis 9, Richtig Cuira</div>
+              <div class="t-to"><span data-conn="hifaart.2.platform" data-conn-prefix="Gleis ">Gleis 9</span>, Richtig Cuira</div>
             </div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">08:58</div>
-            <span class="travel-line-badge badge-re">IR 38</span>
+            <div class="travel-time" data-conn="hifaart.3.dep">08:58</div>
+            <span class="travel-line-badge badge-re" data-conn="hifaart.3.line">IR 38</span>
             <div class="travel-desc">
               <div class="t-from">Cuira → Spinas</div>
-              <div class="t-to">Gleis 10, Richtig San Murezzan</div>
+              <div class="t-to"><span data-conn="hifaart.3.platform" data-conn-prefix="Gleis ">Gleis 10</span>, Richtig San Murezzan</div>
             </div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">10:37</div>
+            <div class="travel-time" data-conn="hifaart.3.arr">10:37</div>
             <div class="travel-desc">
               <div class="t-from">🏁 Spinas — Los goot's!</div>
-              <div class="t-to">Faarzit total: 5 Std. 25 Min.</div>
+              <div class="t-to">Faarzit total: <span data-conn="hifaart.durationText">5 Std. 25 Min.</span></div>
             </div>
           </div>
         </div>
         <a class="sbb-link" href="https://a.sbbmobile.ch/s/o2gDUXjI" target="_blank" rel="noopener">In SBB App uufmache</a>
       </div>
+      <!-- conn:hifaart:end -->
 
+      <!-- conn:heimfaart:start -->
       <div class="travel-card anim-fadeUp" style="transition-delay:0.12s">
         <div class="travel-card-header">🏠 Heimfaart — Mo. 28. September</div>
         <div class="travel-card-body">
           <div class="travel-leg">
-            <div class="travel-time">16:20</div>
+            <div class="travel-time" data-conn="heimfaart.0.dep">16:20</div>
             <div class="travel-desc">
               <div class="t-from">Teufi, Tavau Dischma</div>
               <div class="t-to">Bus jeda Stond um :20</div>
@@ -1142,60 +1188,80 @@
           </div>
           <div class="travel-leg">
             <div class="travel-time"></div>
-            <span class="travel-line-badge badge-bus">B 313</span>
+            <span class="travel-line-badge badge-bus" data-conn="heimfaart.0.line">B 313</span>
             <div class="travel-desc"><div class="t-to">→ Tavau Dorf, Bhf</div></div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">16:43</div>
-            <span class="travel-line-badge badge-ev">EV1</span>
+            <div class="travel-time" data-conn="heimfaart.1.dep">16:43</div>
+            <span class="travel-line-badge badge-ev" data-conn="heimfaart.1.line">EV1</span>
             <div class="travel-desc">
               <div class="t-from">Tavau Dorf → Küblis</div>
               <div class="t-to">Ersatzbus, Richtig Küblis</div>
             </div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">17:18</div>
-            <span class="travel-line-badge badge-re">RE 13</span>
+            <div class="travel-time" data-conn="heimfaart.2.dep">17:18</div>
+            <span class="travel-line-badge badge-re" data-conn="heimfaart.2.line">RE 13</span>
             <div class="travel-desc">
               <div class="t-from">Küblis → Landquart</div>
-              <div class="t-to">Gleis 1, Richtig Landquart</div>
+              <div class="t-to"><span data-conn="heimfaart.2.platform" data-conn-prefix="Gleis ">Gleis 1</span>, Richtig Landquart</div>
             </div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">17:48</div>
-            <span class="travel-line-badge badge-ic">ICE</span>
+            <div class="travel-time" data-conn="heimfaart.3.dep">17:48</div>
+            <span class="travel-line-badge badge-ic" data-conn="heimfaart.3.line">ICE</span>
             <div class="travel-desc">
               <div class="t-from">Landquart → Basel SBB</div>
-              <div class="t-to">Gleis 3, Richtig Frankfurt</div>
+              <div class="t-to"><span data-conn="heimfaart.3.platform" data-conn-prefix="Gleis ">Gleis 3</span>, Richtig Frankfurt</div>
             </div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">20:02</div>
-            <span class="travel-line-badge badge-re">IR 56</span>
+            <div class="travel-time" data-conn="heimfaart.4.dep">20:02</div>
+            <span class="travel-line-badge badge-re" data-conn="heimfaart.4.line">IR 56</span>
             <div class="travel-desc">
               <div class="t-from">Basel SBB → Loufe</div>
-              <div class="t-to">Gleis 20, Richtig Biel</div>
+              <div class="t-to"><span data-conn="heimfaart.4.platform" data-conn-prefix="Gleis ">Gleis 20</span>, Richtig Biel</div>
             </div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">20:29</div>
-            <span class="travel-line-badge badge-bus">B 111</span>
+            <div class="travel-time" data-conn="heimfaart.5.dep">20:29</div>
+            <span class="travel-line-badge badge-bus" data-conn="heimfaart.5.line">B 111</span>
             <div class="travel-desc">
               <div class="t-from">Loufe Bhf → Breitenbach</div>
-              <div class="t-to">Kante E, Richtig Nuninge</div>
+              <div class="t-to"><span data-conn="heimfaart.5.platform" data-conn-prefix="Kante ">Kante E</span>, Richtig Nuninge</div>
             </div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">20:40</div>
+            <div class="travel-time" data-conn="heimfaart.5.arr">20:40</div>
             <div class="travel-desc">
               <div class="t-from">🏁 Breitenbach, Dorfplatz</div>
-              <div class="t-to">Faarzit total: 4 Std. 20 Min.</div>
+              <div class="t-to">Faarzit total: <span data-conn="heimfaart.durationText">4 Std. 20 Min.</span></div>
             </div>
           </div>
         </div>
         <a class="sbb-link" href="https://a.sbbmobile.ch/s/NO6Vq5mn" target="_blank" rel="noopener">In SBB App uufmache</a>
       </div>
+      <!-- conn:heimfaart:end -->
 
+    </div>
+
+    <!-- NOTFALL-CHÄRTLI — Nummere verifiziert 2026-08-18 gäge grialetsch.ch und chesadimena.ch -->
+    <div class="notfall anim-fadeUp">
+      <div class="notfall-header">⛑ Notfall-Chärtli — hoffentlich bruuchts es nid</div>
+      <div class="notfall-body">
+        <div class="notfall-numbers">
+          <a class="notfall-num" href="tel:1414"><span class="nf-icon">🚁</span><span class="nf-label">REGA</span><span class="nf-val">1414</span></a>
+          <a class="notfall-num" href="tel:112"><span class="nf-icon">🆘</span><span class="nf-label">Notruef</span><span class="nf-val">112</span></a>
+          <a class="notfall-num" href="tel:+41814163436"><span class="nf-icon">🏔</span><span class="nf-label">Chamanna da Grialetsch</span><span class="nf-val">081 416 34 36</span></a>
+          <a class="notfall-num" href="tel:+41818542264"><span class="nf-icon">🛏</span><span class="nf-label">Chesa Dimena, La Punt</span><span class="nf-val">081 854 22 64</span></a>
+        </div>
+        <div class="notfall-bailouts">
+          <div class="nf-day"><strong>Tag 1 (Spinas → La Punt):</strong> Abbruch: zrugg uf Spinas oder wiiter uf Bever — RhB-Züg fahred regelmässig.</div>
+          <div class="nf-day"><strong>Tag 2 (Val Grialetsch):</strong> Abbruch vor de Hütta: zrugg uf Röve — Poschtouto 331 Richtig Susch oder Tavau.</div>
+          <div class="nf-day"><strong>Tag 3 (Fuorcla/Dischma):</strong> Abbruch: zrugg zur Hütta oder abe uf Dürrboden — Bus 313 Richtig Tavau.</div>
+        </div>
+        <div class="notfall-hint">📸 Mach en Screenshot devo — wiit obe häts kei Empfang!</div>
+      </div>
     </div>
 
     <!-- PACK-LISTE -->
@@ -1340,46 +1406,180 @@
       progressBar.style.width = progress + '%';
     }, { passive: true });
 
-    // Countdown to 26 September 2026, 05:12 (departure time)
+    // ══ Läbigi Siite: Trip-Zuestandsmaschine (BEFORE / DURING / AFTER) ══
+    // conn:countdown-target — Abfahrt ab Breitenbach (repaired by the watchdog)
     var target = new Date('2026-09-26T05:12:00+02:00').getTime();
-    function updateCountdown() {
-      var now = Date.now();
-      var diff = target - now;
-      if (diff <= 0) {
-        document.getElementById('countdown').innerHTML = '<div class="countdown-item"><div class="countdown-val" style="font-size:clamp(14px,3.5vw,18px);">Los goot\'s!</div></div>';
-        return;
-      }
-      var d = Math.floor(diff / 86400000);
-      var h = Math.floor((diff % 86400000) / 3600000);
-      var m = Math.floor((diff % 3600000) / 60000);
-      var s = Math.floor((diff % 60000) / 1000);
-      document.getElementById('cd-days').textContent = d;
-      document.getElementById('cd-hours').textContent = h;
-      document.getElementById('cd-mins').textContent = m;
-      document.getElementById('cd-secs').textContent = s;
-    }
-    updateCountdown();
-    setInterval(updateCountdown, 1000);
 
-    // Calendar .ics download
-    var icsContent = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//Wanderwucheend//NONSGML v1.0//EN',
-      'BEGIN:VEVENT',
-      'DTSTART;TZID=Europe/Zurich:20260926T051200',
-      'DTEND;TZID=Europe/Zurich:20260928T204000',
-      'SUMMARY:Wanderwucheend 2026 — Engadin & Tavau',
-      'LOCATION:Graubünden\\, Schweiz',
-      'DESCRIPTION:3 Täg\\, 30 km\\, 2 Nacht in de Alpe.\\n\\n' +
-        'Route: Spinas → La Punt → Grialetsch-Hütta → Tavau Dischma\\n' +
-        'Nacht 1: Chesa Dimena\\, La Punt (B&B)\\n' +
-        'Nacht 2: Chamanna da Grialetsch CAS (Halbpension)\\n\\n' +
-        'Abfahrt: 05:12 ab Breitenbach',
-      'END:VEVENT',
-      'END:VCALENDAR'
-    ].join('\r\n');
-    document.getElementById('calLink').href = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(icsContent);
+    // ?fake-date=YYYY-MM-DD[THH:MM] — Vorschau, als Zürcher Wandzit interpretiert.
+    // Manuell parsed (kei Date-String-Parsing — iOS Safari!), Unsinn → still ignoriert.
+    var fakeNow = null;
+    try {
+      var fdRaw = new URLSearchParams(location.search).get('fake-date');
+      if (fdRaw) {
+        var fd = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?$/.exec(fdRaw);
+        if (fd) fakeNow = { y: +fd[1], mo: +fd[2], d: +fd[3], h: +(fd[4] || 0), mi: +(fd[5] || 0), s: 0 };
+      }
+    } catch (e) {}
+
+    var zhFmt = null;
+    try {
+      zhFmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zurich', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
+    } catch (e) {}
+
+    function zurichNow() {
+      if (fakeNow) return fakeNow;
+      if (!zhFmt) { // Fallback ohni Intl: s'Trip-Fenschter isch komplett CEST (+2)
+        var u = new Date(Date.now() + 2 * 3600000);
+        return { y: u.getUTCFullYear(), mo: u.getUTCMonth() + 1, d: u.getUTCDate(), h: u.getUTCHours(), mi: u.getUTCMinutes(), s: u.getUTCSeconds() };
+      }
+      var p = {};
+      zhFmt.formatToParts(new Date()).forEach(function (x) { p[x.type] = x.value; });
+      return { y: +p.year, mo: +p.month, d: +p.day, h: +p.hour % 24, mi: +p.minute, s: +p.second };
+    }
+
+    function stateOf(now) {
+      var key = now.y * 10000 + now.mo * 100 + now.d;
+      if (key < 20260926) return 'before';
+      if (key <= 20260928) return 'during';
+      return 'after';
+    }
+
+    // Verbindige us connections.json — de glich File wo de Watchdog hüetet
+    var CONN_STAMP = '1'; // conn:cache-stamp (vom Watchdog bumped, pinnt HTML+JSON zäme)
+    var connData = null, connLoading = false;
+    function loadConnections() {
+      if (connLoading) return;
+      connLoading = true;
+      // Timeout guard: a hung fetch würd connLoading für immer blockiere
+      var opts = (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) ? { signal: AbortSignal.timeout(15000) } : {};
+      fetch('connections.json?v=' + CONN_STAMP, opts)
+        .then(function (r) { if (!r.ok) throw new Error('http'); return r.json(); })
+        .then(function (j) { connData = j; })
+        .catch(function () { connData = null; })
+        .then(function () { connLoading = false; });
+    }
+    loadConnections();
+    setInterval(function () { // R5: im Funkloch still wiiter probiere
+      if (!connData && stateOf(zurichNow()) === 'during') loadConnections();
+    }, 60000);
+
+    var STAGES = [
+      { title: 'Hüt: Etappe 1', route: 'Spinas → La Punt', sbb: { von: 'Breitenbach, Dorfplatz', nach: 'Spinas' } },
+      { title: 'Hüt: Etappe 2', route: 'La Punt → Grialetsch-Hütta', sbb: { von: 'La Punt Chamues-ch', nach: 'Susch, Röven' } },
+      { title: 'Hüt: Etappe 3', route: 'Grialetsch → Teufi, Tavau', sbb: { von: 'Davos Dischma, Teufi', nach: 'Breitenbach, Dorfplatz' } }
+    ];
+    // Handgschribeni Jetz-grad-Fenschter (Minute vom Tag). Bewusst unfalsifizierbar formuliert.
+    var JETZGRAD = [
+      [ [270, 312, 'höchschtwahrschiinlech grad no am Zmorge-Kafi'],
+        [312, 637, 'im Zug Richtig Bärge — d\'Vorfreud stiigt'],
+        [637, 780, 'uf em Weg vo Spinas dur s\'Val Bever'],
+        [780, 850, 'höchschtwahrschiinlech am Mittagsrascht'],
+        [850, 1050, 'irgendwo zwüsche Spinas und La Punt underwegs'],
+        [1050, 1260, 'z\'La Punt aacho — Znacht und es kalts Bier'],
+        [1260, 1440, 'in de Federe in de Chesa Dimena'] ],
+      [ [0, 480, 'no am Schlofe z\'La Punt'],
+        [480, 683, 'Zmorge — und viliicht en Abstecher uf Zuoz'],
+        [683, 733, 'im Zügli und Poschtouto Richtig Röve'],
+        [733, 930, 'am Ufstiige durs Val Grialetsch — 771 Höhemeter!'],
+        [930, 1080, 'höchschtwahrschiinlech scho bi de Hütta obe'],
+        [1080, 1440, 'Znacht in de Chamanna da Grialetsch, 2540 M.ü.M.'] ],
+      [ [0, 450, 'am Schlofe uf 2540 Meter'],
+        [450, 540, 'Zmorge in de Hütta — denn goot\'s los'],
+        [540, 780, 'über d\'Fuorcla — s\'ganze Dischma-Tal vor eus'],
+        [780, 980, 'am Abstiige Richtig Teufi'],
+        [980, 1240, 'uf de Heimreis — müed aber glücklich'],
+        [1240, 1440, 'wieder dihei — bis zum nächschte Mal!'] ]
+    ];
+    var JETZGRAD_FALLBACK = 'irgendwo dusse i de Bärge';
+
+    function toMin(hm) { return +hm.slice(0, 2) * 60 + +hm.slice(3, 5); }
+
+    function nextDeparture(dayIdx, minOfDay) {
+      if (!connData) return null;
+      var list = [];
+      function pushLegs(j, fromIdx) {
+        var legs = connData.journeys[j].legs;
+        for (var i = fromIdx; i < legs.length; i++) {
+          var lg = legs[i];
+          list.push({ hm: lg.dep, label: lg.line.display + ' ab ' + lg.from.display + (lg.platform ? ' (' + (lg.line.category === 'B' ? 'Kante ' : 'Gleis ') + lg.platform + ')' : '') });
+        }
+      }
+      if (dayIdx === 0) pushLegs('hifaart', 0);
+      else if (dayIdx === 1) pushLegs('tag2', 0);
+      else {
+        ((connData.b313 && connData.b313.departures) || []).forEach(function (hm) {
+          list.push({ hm: hm, label: 'B 313 ab Teufi' });
+        });
+        pushLegs('heimfaart', 1);
+      }
+      list.sort(function (a, b) { return toMin(a.hm) - toMin(b.hm); });
+      for (var k = 0; k < list.length; k++) {
+        if (toMin(list[k].hm) >= minOfDay) return list[k];
+      }
+      return null;
+    }
+
+    function pad2(n) { return String(n).length < 2 ? '0' + n : String(n); }
+    function show(el, on) { el.style.display = on ? '' : 'none'; }
+
+    var elCountdown = document.getElementById('countdown');
+    var elHuet = document.getElementById('huetPanel');
+    var elAfter = document.getElementById('afterPanel');
+
+    function renderBefore() {
+      var diff = target - Date.now();
+      if (fakeNow) { // Countdown gäge d'Fake-Zit (Trip-Fenschter isch komplett CEST)
+        diff = target - Date.UTC(fakeNow.y, fakeNow.mo - 1, fakeNow.d, fakeNow.h - 2, fakeNow.mi, fakeNow.s);
+      }
+      if (diff < 0) diff = 0;
+      document.getElementById('cd-days').textContent = Math.floor(diff / 86400000);
+      document.getElementById('cd-hours').textContent = Math.floor((diff % 86400000) / 3600000);
+      document.getElementById('cd-mins').textContent = Math.floor((diff % 3600000) / 60000);
+      document.getElementById('cd-secs').textContent = Math.floor((diff % 60000) / 1000);
+    }
+
+    function renderDuring(now) {
+      var dayIdx = now.d - 26;
+      var stage = STAGES[dayIdx];
+      document.getElementById('huetTitle').textContent = stage.title;
+      document.getElementById('huetRoute').textContent = stage.route;
+      var minOfDay = now.h * 60 + now.mi;
+      var line = JETZGRAD_FALLBACK;
+      JETZGRAD[dayIdx].forEach(function (w) { if (minOfDay >= w[0] && minOfDay < w[1]) line = w[2]; });
+      document.getElementById('huetJetzgrad').textContent = 'Jetz grad: ' + line + ' …';
+      var depEl = document.getElementById('huetDeparture');
+      var dep = nextDeparture(dayIdx, minOfDay);
+      if (dep) depEl.textContent = '🚌 Nächschti Abfahrt: ' + dep.hm + ' — ' + dep.label;
+      show(depEl, !!dep);
+      var live = document.getElementById('huetLive');
+      var tpl = connData && connData.meta && connData.meta.sbbLinkTemplate;
+      if (tpl) {
+        live.href = tpl.replace('{von}', encodeURIComponent(stage.sbb.von)).replace('{nach}', encodeURIComponent(stage.sbb.nach)).replace('{datum}', now.y + '-' + pad2(now.mo) + '-' + pad2(now.d)).replace('{zeit}', pad2(now.h) + ':' + pad2(now.mi));
+      }
+      show(live, !!tpl);
+    }
+
+    function renderAfter(now) {
+      var days = Math.round((Date.UTC(now.y, now.mo - 1, now.d) - Date.UTC(2026, 8, 28)) / 86400000);
+      document.getElementById('afterCount').textContent = days === 1
+        ? 'Geschter simmer no obe gsi — was für es Wucheend!'
+        : 'Scho ' + days + ' Täg sit em Wanderwucheend';
+    }
+
+    function tick() {
+      var now = zurichNow();
+      var st = stateOf(now);
+      show(elCountdown, st === 'before');
+      show(elHuet, st === 'during');
+      show(elAfter, st === 'after');
+      if (st === 'before') renderBefore();
+      else if (st === 'during') renderDuring(now);
+      else renderAfter(now);
+    }
+    tick();
+    setInterval(tick, 1000);
+
+    // Calendar: served as static file wanderwucheend-2026.ics (repaired by the watchdog)
 
     // Interactive packing checklist with localStorage persistence
     var packItems = document.querySelectorAll('.pack-item');

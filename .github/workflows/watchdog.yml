@@ -1,0 +1,107 @@
+# Fahrplan-Watchdog — nightly detect-and-issue for the booked SBB connections.
+# Self-disables after 28.09.2026 (R17); the October cleanup deletes this file.
+# workflow_dispatch (and its api_base test override) is collaborator-only by
+# GitHub's default trigger permissions.
+name: Fahrplan-Watchdog
+
+on:
+  schedule:
+    - cron: '23 3 * * *' # ~05:23 Swiss time, nightly
+  workflow_dispatch:
+    inputs:
+      api_base:
+        description: 'API base override (testing only)'
+        required: false
+        default: ''
+
+concurrency:
+  group: watchdog
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # state-file commits (and later: repairs)
+      issues: write # diff/blind/tracking issues + heartbeat
+      actions: write # R17 self-disable after the trip
+      pages: write # deploy insurance after pushes
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: '22.11.0'
+      - name: Preflight (tests + page integrity)
+        run: |
+          node --test watchdog/lib.test.mjs
+          node watchdog/check-page.mjs
+      - name: Install gate dependencies (parse5, jsdom — CI only)
+        run: npm ci --no-fund --no-audit
+      - name: Detect timetable changes and apply value-level repairs
+        id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WATCHDOG_API_BASE: ${{ inputs.api_base }}
+        run: node watchdog/run.mjs
+      - name: Structural card rewrite (AI arm — tool-restricted, no shell, no network)
+        if: always() && steps.detect.outputs.structural == 'true'
+        uses: anthropics/claude-code-action@459ad358ae43fea66bfefd0a1f8d840b4b9791fb # v1.0.194
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ github.token }}
+          prompt: |
+            Read watchdog/structural-prompt.md and follow it exactly. The
+            structural changes to apply are listed in .structural-changes.json.
+            Edit only the affected card regions in index.html.
+          claude_args: '--allowedTools "Read,Edit,Glob,Grep" --max-turns 30'
+      - name: Validation gate (R22 — no commit without proof of an intact page)
+        id: gate
+        if: always() && (steps.detect.outputs.repaired == 'true' || steps.detect.outputs.structural == 'true')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! node watchdog/gate.mjs 2> gate-errors.txt; then
+            echo "gate failed — reverting repair, opening issue"
+            gh issue create \
+              --title "⛔ Watchdog-Reparatur vom Gate gstoppt ($(date -u +%F))" \
+              --body "$(printf 'De Reparatur-Versuech het d'\''Validierig nid bestande und isch NID committed worde.\n\n```\n%s\n```\n\nD'\''Fahrplan-Änderig muess vo Hand aagwandt wärde — Details im Lauf-Log.' "$(cat gate-errors.txt)")"
+            git checkout -- connections.json index.html wanderwucheend-2026.ics
+            rm -f .repair-summary.md .structural-changes.json
+            echo "passed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "passed=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Persist state and gated repairs
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "wanderwucheend-watchdog"
+          git config user.email "watchdog@users.noreply.github.com"
+          git add .github/watchdog-state.json connections.json index.html wanderwucheend-2026.ics
+          if ! git diff --cached --quiet; then
+            if [ -f .repair-summary.md ]; then
+              printf 'fix(fahrplan): auto-repair timetable\n\n%s\n\nApplied by the Fahrplan-Watchdog after passing the R22 validation gate.\n' "$(cat .repair-summary.md)" > commit-msg.txt
+            else
+              printf 'chore(watchdog): state update %s\n' "$(date -u +%F)" > commit-msg.txt
+            fi
+            git commit -F commit-msg.txt
+            # Rebase once; a conflict means a human moved main — abort and surface.
+            if ! git pull --rebase origin main; then
+              git rebase --abort || true
+              gh issue create --title "⚠️ Watchdog-Push-Konflikt ($(date -u +%F))" \
+                --body "Main het sich während em Watchdog-Lauf bewegt und s'Rebase isch konfliktbehaftet. De Lauf het NID pusht — nächschti Nacht probiert er's wieder."
+              exit 1
+            fi
+            git push
+            # Deploy insurance: GITHUB_TOKEN pushes do not reliably trigger the
+            # Pages build workflow — request one explicitly (no-op if already queued).
+            gh api -X POST "repos/${GITHUB_REPOSITORY}/pages/builds" || true
+          fi
+      - name: Announce repair (tracking comment + share-link follow-up)
+        if: always() && steps.gate.outputs.passed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node watchdog/post-repair.mjs

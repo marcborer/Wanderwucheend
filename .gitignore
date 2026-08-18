@@ -1,3 +1,6 @@
 /.claude/*
 /docs/*
 generate-og-image.html
+node_modules/
+.repair-summary.md
+.structural-changes.json
