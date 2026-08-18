@@ -1,0 +1,11 @@
+{
+  "name": "wanderwucheend-watchdog",
+  "private": true,
+  "description": "CI-only tooling for the Fahrplan-Watchdog. The shipped page stays dependency- and build-free.",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "devDependencies": {
+    "jsdom": "25.0.1",
+    "parse5": "7.2.1"
+  }
+}

@@ -9,6 +9,7 @@ import {
   validateApiResponse, matchBookedJourney, classifyDiff, applyDebounce,
   validateState, initialState, toMin
 } from './lib.mjs';
+import { applyValueRepair, AmbiguousRepairError } from './repair.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const STATE_PATH = join(root, '.github', 'watchdog-state.json');
@@ -108,7 +109,8 @@ const { state, corrupt } = loadState();
 const conn = JSON.parse(readFileSync(join(root, 'connections.json'), 'utf8'));
 
 let runFailed = corrupt;
-const report = { diffs: [], held: [], ambiguous: [], structural: [], b313Missing: [], errors: [] };
+const report = { held: [], ambiguous: [], structural: [], b313Missing: [], errors: [] };
+const actByJourney = {};
 
 for (const [key, journey] of Object.entries(conn.journeys)) {
   try {
@@ -123,7 +125,7 @@ for (const [key, journey] of Object.entries(conn.journeys)) {
     } else if (d.kind === 'value') {
       const { act, hold, pending } = applyDebounce(state, key, d.changes, today, journey.date);
       state.pending = pending;
-      if (act.length) report.diffs.push(fmtChanges(key, act));
+      if (act.length) actByJourney[key] = act;
       if (hold.length) report.held.push(fmtChanges(key, hold));
     } else {
       state.pending = applyDebounce(state, key, [], today, journey.date).pending; // clear vanished flaps
@@ -142,8 +144,34 @@ try {
   runFailed = true;
 }
 
-// ── outcomes ──
-const hasFindings = report.diffs.length || report.structural.length || report.ambiguous.length || report.b313Missing.length;
+// ── self-healing repair (R14, value-level only; the gate runs afterwards) ──
+let repaired = null;
+if (Object.keys(actByJourney).length && !runFailed) {
+  try {
+    const files = {
+      conn,
+      html: readFileSync(join(root, 'index.html'), 'utf8'),
+      ics: readFileSync(join(root, 'wanderwucheend-2026.ics'), 'utf8')
+    };
+    const r = applyValueRepair(files, actByJourney);
+    writeFileSync(join(root, 'connections.json'), JSON.stringify(r.conn, null, 2) + '\n');
+    writeFileSync(join(root, 'index.html'), r.html);
+    writeFileSync(join(root, 'wanderwucheend-2026.ics'), r.ics);
+    const summary = Object.entries(actByJourney).map(([k, c]) => fmtChanges(k, c)).join('\n');
+    repaired = { touched: r.touched, summary };
+    writeFileSync(join(root, '.repair-summary.md'), summary + '\n');
+    console.log('repair applied:\n' + summary);
+  } catch (e) {
+    if (e instanceof AmbiguousRepairError) report.ambiguous.push('repair: ' + e.message);
+    else { report.errors.push('repair: ' + String(e.message).slice(0, 200)); runFailed = true; }
+  }
+}
+if (process.env.GITHUB_OUTPUT) {
+  writeFileSync(process.env.GITHUB_OUTPUT, `repaired=${repaired ? 'true' : 'false'}\n`, { flag: 'a' });
+}
+
+// ── outcomes needing a human: structural, ambiguous, B313 pattern breaks ──
+const hasFindings = report.structural.length || report.ambiguous.length || report.b313Missing.length;
 
 if (runFailed) {
   state.failures += 1;
@@ -167,8 +195,6 @@ if (runFailed) {
 if (hasFindings) {
   const sections = [];
   if (report.structural.length) sections.push('## ⚠️ Strukturelli Änderige\n' + report.structural.join('\n') + '\n\nDie bruuched (no) e Hand: `connections.json`, d\'Travel-Cards und d\'Share-Links aapasse.');
-  if (report.diffs.length) sections.push('## Zit-/Gleis-Änderige\n' + report.diffs.join('\n'));
-  if (report.held.length) sections.push('## Zruggghalte (Debounce — morn nomol beobachtet)\n' + report.held.join('\n'));
   if (report.ambiguous.length) sections.push('## Unklar (kei eideutigi Verbindig gfonde)\n' + report.ambiguous.map((a) => '- ' + a).join('\n'));
   if (report.b313Missing.length) sections.push('## B313-Muster\nFähledi :20er-Abfahrte ab Teufi: ' + report.b313Missing.join(', '));
   sections.push('\n**Checklischte:** `connections.json` aapasse → Cards folged (CI-Re-Diff prüeft) → Countdown/.ics bi Zitänderige → SBB-Share-Links im SBB-App nöi generiere.');
@@ -186,11 +212,13 @@ if (hasFindings) {
 // Heartbeat in the final week — silence must mean death, not health (R23).
 if (today >= HEARTBEAT_FROM) {
   const n = ensureTrackingIssue(state);
-  const status = runFailed ? `⚠️ Lauf mit Fähler (${state.failures}. Nacht)` : hasFindings ? '🔔 Änderige gmäldet' : '✅ Alles ruhig — Fahrplan stimmt';
+  const status = runFailed ? `⚠️ Lauf mit Fähler (${state.failures}. Nacht)` : repaired ? '🔧 Reparatur aagwandt' : hasFindings ? '🔔 Änderige gmäldet' : report.held.length ? '👀 Gleis-Änderig beobachtet (Debounce)' : '✅ Alles ruhig — Fahrplan stimmt';
   if (n != null) { try { gh(['issue', 'comment', String(n), '--body', `Heartbeat ${today}: ${status}`]); } catch {} }
 }
 
+if (report.held.length) console.log('held by debounce (watching again tomorrow):\n' + report.held.join('\n'));
+
 state.lastRun = today;
 saveState(state);
-console.log('done:', JSON.stringify({ failed: runFailed, findings: !!hasFindings, failures: state.failures }));
+console.log('done:', JSON.stringify({ failed: runFailed, findings: !!hasFindings, repaired: !!repaired, failures: state.failures }));
 if (runFailed) process.exitCode = 1;
