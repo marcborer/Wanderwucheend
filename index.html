@@ -498,6 +498,7 @@
   .badge-s3  { background: #fff; color: #1a1a1a; border: 1.5px solid #1a1a1a; }
   .badge-ic  { background: #eb0000; }
   .badge-re  { background: #fff; color: #eb0000; border: 1.5px solid #eb0000; }
+  .badge-ev  { background: #f07800; color: #fff; }
 
   .travel-desc { flex: 1; min-width: 0; }
   .travel-desc .t-from { font-size: clamp(11px, 2.7vw, 12px); font-weight: 700; color: var(--forest); }
@@ -1086,7 +1087,7 @@
         <div class="travel-card-header">🚆 Hifaart — Sa. 26. September</div>
         <div class="travel-card-body">
           <div class="travel-leg">
-            <div class="travel-time">05:42</div>
+            <div class="travel-time">05:12</div>
             <div class="travel-desc"><div class="t-from">Breitenbach, Dorfplatz</div></div>
           </div>
           <div class="travel-leg">
@@ -1095,7 +1096,7 @@
             <div class="travel-desc"><div class="t-to">→ Zwinge, Bhf</div></div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">05:54</div>
+            <div class="travel-time">05:24</div>
             <span class="travel-line-badge badge-s3">S3</span>
             <div class="travel-desc">
               <div class="t-from">Zwinge → Basel SBB</div>
@@ -1103,11 +1104,11 @@
             </div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">06:33</div>
+            <div class="travel-time">06:06</div>
             <span class="travel-line-badge badge-ic">IC 3</span>
             <div class="travel-desc">
               <div class="t-from">Basel SBB → Cuira</div>
-              <div class="t-to">Gleis 11, Richtig Cuira</div>
+              <div class="t-to">Gleis 9, Richtig Cuira</div>
             </div>
           </div>
           <div class="travel-leg">
@@ -1122,11 +1123,11 @@
             <div class="travel-time">10:37</div>
             <div class="travel-desc">
               <div class="t-from">🏁 Spinas — Los goot's!</div>
-              <div class="t-to">Faarzit total: 4 Std. 55 Min.</div>
+              <div class="t-to">Faarzit total: 5 Std. 25 Min.</div>
             </div>
           </div>
         </div>
-        <a class="sbb-link" href="https://a.sbbmobile.ch/s/7olNA61M" target="_blank" rel="noopener">In SBB App uufmache</a>
+        <a class="sbb-link" href="https://a.sbbmobile.ch/s/o2gDUXjI" target="_blank" rel="noopener">In SBB App uufmache</a>
       </div>
 
       <div class="travel-card anim-fadeUp" style="transition-delay:0.12s">
@@ -1145,11 +1146,19 @@
             <div class="travel-desc"><div class="t-to">→ Tavau Dorf, Bhf</div></div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">16:37</div>
-            <span class="travel-line-badge badge-re">RE 1</span>
+            <div class="travel-time">16:43</div>
+            <span class="travel-line-badge badge-ev">EV1</span>
             <div class="travel-desc">
-              <div class="t-from">Tavau Dorf → Landquart</div>
-              <div class="t-to">Richtig Closters</div>
+              <div class="t-from">Tavau Dorf → Küblis</div>
+              <div class="t-to">Ersatzbus, Richtig Küblis</div>
+            </div>
+          </div>
+          <div class="travel-leg">
+            <div class="travel-time">17:18</div>
+            <span class="travel-line-badge badge-re">RE 13</span>
+            <div class="travel-desc">
+              <div class="t-from">Küblis → Landquart</div>
+              <div class="t-to">Gleis 1, Richtig Landquart</div>
             </div>
           </div>
           <div class="travel-leg">
@@ -1184,7 +1193,7 @@
             </div>
           </div>
         </div>
-        <a class="sbb-link" href="https://a.sbbmobile.ch/s/9YSJp8Rh" target="_blank" rel="noopener">In SBB App uufmache</a>
+        <a class="sbb-link" href="https://a.sbbmobile.ch/s/NO6Vq5mn" target="_blank" rel="noopener">In SBB App uufmache</a>
       </div>
 
     </div>
@@ -1331,8 +1340,8 @@
       progressBar.style.width = progress + '%';
     }, { passive: true });
 
-    // Countdown to 26 September 2026, 05:42 (departure time)
-    var target = new Date('2026-09-26T05:42:00+02:00').getTime();
+    // Countdown to 26 September 2026, 05:12 (departure time)
+    var target = new Date('2026-09-26T05:12:00+02:00').getTime();
     function updateCountdown() {
       var now = Date.now();
       var diff = target - now;
@@ -1358,15 +1367,15 @@
       'VERSION:2.0',
       'PRODID:-//Wanderwucheend//NONSGML v1.0//EN',
       'BEGIN:VEVENT',
-      'DTSTART;TZID=Europe/Zurich:20260926T054200',
-      'DTEND;TZID=Europe/Zurich:20260928T170000',
+      'DTSTART;TZID=Europe/Zurich:20260926T051200',
+      'DTEND;TZID=Europe/Zurich:20260928T204000',
       'SUMMARY:Wanderwucheend 2026 — Engadin & Tavau',
       'LOCATION:Graubünden\\, Schweiz',
       'DESCRIPTION:3 Täg\\, 30 km\\, 2 Nacht in de Alpe.\\n\\n' +
         'Route: Spinas → La Punt → Grialetsch-Hütta → Tavau Dischma\\n' +
         'Nacht 1: Chesa Dimena\\, La Punt (B&B)\\n' +
         'Nacht 2: Chamanna da Grialetsch CAS (Halbpension)\\n\\n' +
-        'Abfahrt: 05:42 ab Breitenbach',
+        'Abfahrt: 05:12 ab Breitenbach',
       'END:VEVENT',
       'END:VCALENDAR'
     ].join('\r\n');
