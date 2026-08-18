@@ -1,0 +1,60 @@
+# Fahrplan-Watchdog — nightly detect-and-issue for the booked SBB connections.
+# Self-disables after 28.09.2026 (R17); the October cleanup deletes this file.
+# workflow_dispatch (and its api_base test override) is collaborator-only by
+# GitHub's default trigger permissions.
+name: Fahrplan-Watchdog
+
+on:
+  schedule:
+    - cron: '23 3 * * *' # ~05:23 Swiss time, nightly
+  workflow_dispatch:
+    inputs:
+      api_base:
+        description: 'API base override (testing only)'
+        required: false
+        default: ''
+
+concurrency:
+  group: watchdog
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # state-file commits (and later: repairs)
+      issues: write # diff/blind/tracking issues + heartbeat
+      actions: write # R17 self-disable after the trip
+      pages: write # deploy insurance after pushes
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: '22.11.0'
+      - name: Preflight (tests + page integrity)
+        run: |
+          node --test watchdog/lib.test.mjs
+          node watchdog/check-page.mjs
+      - name: Detect timetable changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WATCHDOG_API_BASE: ${{ inputs.api_base }}
+        run: node watchdog/run.mjs
+      - name: Persist watchdog state
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "wanderwucheend-watchdog"
+          git config user.email "watchdog@users.noreply.github.com"
+          git add .github/watchdog-state.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(watchdog): state update $(date -u +%F)"
+            git pull --rebase origin main
+            git push
+            # Deploy insurance: GITHUB_TOKEN pushes do not reliably trigger the
+            # Pages build workflow — request one explicitly (no-op if already queued).
+            gh api -X POST "repos/${GITHUB_REPOSITORY}/pages/builds" || true
+          fi
