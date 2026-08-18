@@ -17,7 +17,11 @@ jobs:
       - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: '22.11.0'
+      - name: Install CI dependencies (parse5, jsdom)
+        run: npm ci --no-fund --no-audit
       - name: Watchdog unit tests
-        run: node --test watchdog/lib.test.mjs
+        run: node --test watchdog/lib.test.mjs watchdog/repair.test.mjs
       - name: Page integrity check (re-diff, inline JS syntax, .ics, countdown)
         run: node watchdog/check-page.mjs
+      - name: Page smoke (jsdom — all three states against the real page)
+        run: node --test watchdog/page.smoke.test.mjs

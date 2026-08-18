@@ -43,6 +43,7 @@ export function validateApiResponse(json) {
         category: clean(j.category) ?? '',
         number: j.number == null ? '' : clean(String(j.number)) ?? '',
         operator: clean(j.operator) ?? '',
+        headsign: clean(j.to) ?? '',
         platform: d.platform == null || d.platform === '' ? null : clean(String(d.platform))
       });
     }

@@ -29,7 +29,7 @@ function setBadgeClass(html, key, badge) {
   return html.replace(re, `$1badge-${badge}$2`);
 }
 
-function markShareLink(html, journeyKey) {
+export function markShareLink(html, journeyKey) {
   const start = html.indexOf(`<!-- conn:${journeyKey}:start -->`);
   const end = html.indexOf(`<!-- conn:${journeyKey}:end -->`);
   if (start < 0 || end < 0) return html; // no card region (e.g. tag2) — follow-up issue covers it
@@ -86,7 +86,12 @@ export function applyValueRepair({ conn, html, ics }, changesByJourney) {
     touched.push(jKey);
   }
 
-  // Countdown + .ics follow the journey times (single edit point per plan).
+  return { ...syncDerived({ conn, html, ics }), touched };
+}
+
+// Countdown, .ics, and cache stamp follow the journey times — one derived-sync
+// step shared by the value and structural arms.
+export function syncDerived({ conn, html, ics }) {
   const hifDep = conn.journeys.hifaart.legs[0].dep;
   html = html.replace(
     /(conn:countdown-target[^\n]*\n\s*var target = new Date\(')[^']+('\))/,
@@ -101,5 +106,42 @@ export function applyValueRepair({ conn, html, ics }, changesByJourney) {
   // Cache pinning: bump the stamp so HTML and JSON versions stay paired.
   html = html.replace(/(var CONN_STAMP = ')(\d+)(')/, (_, a, n, c) => a + (Number(n) + 1) + c);
 
-  return { conn, html, ics, touched };
+  return { conn, html, ics };
+}
+
+// Structural arm, deterministic half (R14/R18): rebuild a journey's legs in
+// connections.json from the journey-matched candidate. Stops without an
+// existing dialect mapping and unmapped line categories are ambiguous (R11).
+export function applyStructuralJson(conn, journeyKey, candidateLegs) {
+  const displayById = {};
+  for (const j of Object.values(conn.journeys)) {
+    for (const leg of j.legs) {
+      displayById[leg.from.id] = leg.from.display;
+      displayById[leg.to.id] = leg.to.display;
+    }
+  }
+  if (conn.b313) { displayById[conn.b313.from.id] = conn.b313.from.display; displayById[conn.b313.to.id] = conn.b313.to.display; }
+  const stops = (conn.meta && conn.meta.stops) || {};
+  const resolveDisplay = (id, apiName) =>
+    displayById[id] ?? stops[apiName] ?? stops[apiName.replace(/, (Bahnhof|staziun|Staziun)$/, '')] ?? null;
+  const legs = candidateLegs.map((cl) => {
+    const badge = BADGE_BY_CATEGORY[cl.category];
+    if (!badge) throw new AmbiguousRepairError(`no badge mapping for category ${cl.category}`);
+    const fromDisplay = resolveDisplay(cl.fromId, cl.fromName), toDisplay = resolveDisplay(cl.toId, cl.toName);
+    if (!fromDisplay || !toDisplay) {
+      throw new AmbiguousRepairError(`no dialect mapping for stop ${!fromDisplay ? cl.fromId + ' ' + cl.fromName : cl.toId + ' ' + cl.toName} (R11: issue, not commit)`);
+    }
+    return {
+      from: { id: cl.fromId, api: cl.fromName, display: fromDisplay },
+      to: { id: cl.toId, api: cl.toName, display: toDisplay },
+      dep: cl.dep, arr: cl.arr,
+      line: { category: cl.category, number: cl.number, display: lineDisplay(cl.category, cl.number), badge },
+      platform: cl.platform,
+      direction: cl.headsign || cl.toName
+    };
+  });
+  const journey = conn.journeys[journeyKey];
+  journey.legs = legs;
+  journey.durationMin = journeyDurationMin(journey);
+  return legs;
 }

@@ -45,9 +45,20 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           WATCHDOG_API_BASE: ${{ inputs.api_base }}
         run: node watchdog/run.mjs
+      - name: Structural card rewrite (AI arm — tool-restricted, no shell, no network)
+        if: always() && steps.detect.outputs.structural == 'true'
+        uses: anthropics/claude-code-action@459ad358ae43fea66bfefd0a1f8d840b4b9791fb # v1.0.194
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ github.token }}
+          prompt: |
+            Read watchdog/structural-prompt.md and follow it exactly. The
+            structural changes to apply are listed in .structural-changes.json.
+            Edit only the affected card regions in index.html.
+          claude_args: '--allowedTools "Read,Edit,Glob,Grep" --max-turns 30'
       - name: Validation gate (R22 — no commit without proof of an intact page)
         id: gate
-        if: always() && steps.detect.outputs.repaired == 'true'
+        if: always() && (steps.detect.outputs.repaired == 'true' || steps.detect.outputs.structural == 'true')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -57,7 +68,7 @@ jobs:
               --title "⛔ Watchdog-Reparatur vom Gate gstoppt ($(date -u +%F))" \
               --body "$(printf 'De Reparatur-Versuech het d'\''Validierig nid bestande und isch NID committed worde.\n\n```\n%s\n```\n\nD'\''Fahrplan-Änderig muess vo Hand aagwandt wärde — Details im Lauf-Log.' "$(cat gate-errors.txt)")"
             git checkout -- connections.json index.html wanderwucheend-2026.ics
-            rm -f .repair-summary.md
+            rm -f .repair-summary.md .structural-changes.json
             echo "passed=false" >> "$GITHUB_OUTPUT"
           else
             echo "passed=true" >> "$GITHUB_OUTPUT"

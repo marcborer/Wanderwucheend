@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { applyValueRepair, AmbiguousRepairError, lineDisplay } from './repair.mjs';
-import { rediffCards } from './lib.mjs';
+import { applyValueRepair, applyStructuralJson, syncDerived, AmbiguousRepairError, lineDisplay } from './repair.mjs';
+import { rediffCards, validateApiResponse, journeyDurationMin } from './lib.mjs';
 import { parseHunks, allowedHtmlRanges, rangesCovered, FILE_ALLOWLIST } from './gate.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -101,6 +101,47 @@ test('line display convention: spaces for trains, compact for S and EV', () => {
   assert.equal(lineDisplay('S', '3'), 'S3');
   assert.equal(lineDisplay('EV', 'EV1'), 'EV1');
   assert.equal(lineDisplay('ICE', ''), 'ICE');
+});
+
+// ── structural arm (deterministic half) ──
+
+test('structural repair rebuilds journey legs from the matched candidate with dialect displays', () => {
+  const fx = JSON.parse(readFileSync(join(here, 'fixtures', 'heimfaart-ev1.json'), 'utf8'));
+  const candidate = validateApiResponse(fx).connections[0];
+  const f = files();
+  // simulate the pre-EV1 booked state: collapse legs 1+2 into a fictional direct train
+  f.conn.journeys.heimfaart.legs.splice(1, 2, {
+    from: { id: '8574848', api: 'Davos Dorf, Bahnhof', display: 'Tavau Dorf' },
+    to: { id: '8509002', api: 'Landquart', display: 'Landquart' },
+    dep: '16:37', arr: '17:33',
+    line: { category: 'RE', number: '1', display: 'RE 1', badge: 're' },
+    platform: null, direction: 'Klosters'
+  });
+  const newLegs = applyStructuralJson(f.conn, 'heimfaart', candidate.legs);
+  assert.equal(newLegs.length, 6);
+  assert.equal(newLegs[1].line.display, 'EV1');
+  assert.equal(newLegs[1].line.badge, 'ev');
+  assert.match(newLegs[1].from.display, /^Tavau Dorf/); // dialect mapping survived
+  assert.equal(newLegs[1].to.display, 'Küblis'); // new stop resolved via meta.stops
+  assert.equal(f.conn.journeys.heimfaart.durationMin, journeyDurationMin(f.conn.journeys.heimfaart));
+});
+
+test('structural repair with an unmapped stop is ambiguous (issue, not commit)', () => {
+  const fx = JSON.parse(readFileSync(join(here, 'fixtures', 'heimfaart-ev1.json'), 'utf8'));
+  const candidate = validateApiResponse(fx).connections[0];
+  const mutated = JSON.parse(JSON.stringify(candidate));
+  mutated.legs[1].toId = '7777777'; // a stop this site has never named in dialect
+  mutated.legs[1].toName = 'Irgendwo Neues';
+  assert.throws(() => applyStructuralJson(files().conn, 'heimfaart', mutated.legs), AmbiguousRepairError);
+});
+
+test('syncDerived alone updates countdown/.ics from JSON and bumps the stamp', () => {
+  const f = files();
+  f.conn.journeys.hifaart.legs[0].dep = '05:20';
+  const r = syncDerived(f);
+  assert.match(r.html, /var target = new Date\('2026-09-26T05:20:00\+02:00'\)/);
+  assert.match(r.ics, /DTSTART;TZID=Europe\/Zurich:20260926T052000/);
+  assert.match(r.html, /var CONN_STAMP = '2'/);
 });
 
 // ── gate helpers ──

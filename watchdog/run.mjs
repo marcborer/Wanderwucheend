@@ -9,7 +9,7 @@ import {
   validateApiResponse, matchBookedJourney, classifyDiff, applyDebounce,
   validateState, initialState, toMin
 } from './lib.mjs';
-import { applyValueRepair, AmbiguousRepairError } from './repair.mjs';
+import { applyValueRepair, applyStructuralJson, syncDerived, markShareLink, AmbiguousRepairError } from './repair.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const STATE_PATH = join(root, '.github', 'watchdog-state.json');
@@ -111,6 +111,7 @@ const conn = JSON.parse(readFileSync(join(root, 'connections.json'), 'utf8'));
 let runFailed = corrupt;
 const report = { held: [], ambiguous: [], structural: [], b313Missing: [], errors: [] };
 const actByJourney = {};
+const structuralByJourney = {};
 
 for (const [key, journey] of Object.entries(conn.journeys)) {
   try {
@@ -121,7 +122,7 @@ for (const [key, journey] of Object.entries(conn.journeys)) {
     if (m.status === 'ambiguous') { report.ambiguous.push(`${key}: ${m.reason}`); continue; }
     const d = classifyDiff(m.candidate, journey);
     if (d.kind === 'structural') {
-      report.structural.push(`${key}: Streckenstruktur het gänderet (Legs: ${journey.legs.length} → ${m.candidate.legs.length})`);
+      structuralByJourney[key] = m.candidate.legs;
     } else if (d.kind === 'value') {
       const { act, hold, pending } = applyDebounce(state, key, d.changes, today, journey.date);
       state.pending = pending;
@@ -144,22 +145,39 @@ try {
   runFailed = true;
 }
 
-// ── self-healing repair (R14, value-level only; the gate runs afterwards) ──
+// ── self-healing repair (R14): deterministic value arm + structural JSON prep ──
 let repaired = null;
-if (Object.keys(actByJourney).length && !runFailed) {
+const structuralPrepared = [];
+if ((Object.keys(actByJourney).length || Object.keys(structuralByJourney).length) && !runFailed) {
   try {
-    const files = {
-      conn,
+    let working = {
+      conn: JSON.parse(JSON.stringify(conn)),
       html: readFileSync(join(root, 'index.html'), 'utf8'),
       ics: readFileSync(join(root, 'wanderwucheend-2026.ics'), 'utf8')
     };
-    const r = applyValueRepair(files, actByJourney);
-    writeFileSync(join(root, 'connections.json'), JSON.stringify(r.conn, null, 2) + '\n');
-    writeFileSync(join(root, 'index.html'), r.html);
-    writeFileSync(join(root, 'wanderwucheend-2026.ics'), r.ics);
-    const summary = Object.entries(actByJourney).map(([k, c]) => fmtChanges(k, c)).join('\n');
-    repaired = { touched: r.touched, summary };
+    const summaryParts = [];
+    for (const [key, candidateLegs] of Object.entries(structuralByJourney)) {
+      const newLegs = applyStructuralJson(working.conn, key, candidateLegs);
+      working.html = markShareLink(working.html, key);
+      structuralPrepared.push({ journey: key, legs: newLegs, durationMin: working.conn.journeys[key].durationMin });
+      summaryParts.push(`- ${key}: Streckestruktur nöi (${conn.journeys[key].legs.length} → ${newLegs.length} Legs) — Card-Text schriibt d'KI, s'Gate prüeft`);
+    }
+    if (Object.keys(actByJourney).length) {
+      const r = applyValueRepair(working, actByJourney);
+      working = { conn: r.conn, html: r.html, ics: r.ics };
+      summaryParts.push(Object.entries(actByJourney).map(([k, c]) => fmtChanges(k, c)).join('\n'));
+    } else {
+      working = syncDerived(working);
+    }
+    writeFileSync(join(root, 'connections.json'), JSON.stringify(working.conn, null, 2) + '\n');
+    writeFileSync(join(root, 'index.html'), working.html);
+    writeFileSync(join(root, 'wanderwucheend-2026.ics'), working.ics);
+    const summary = summaryParts.join('\n');
+    repaired = { summary };
     writeFileSync(join(root, '.repair-summary.md'), summary + '\n');
+    if (structuralPrepared.length) {
+      writeFileSync(join(root, '.structural-changes.json'), JSON.stringify({ items: structuralPrepared }, null, 2) + '\n');
+    }
     console.log('repair applied:\n' + summary);
   } catch (e) {
     if (e instanceof AmbiguousRepairError) report.ambiguous.push('repair: ' + e.message);
@@ -167,7 +185,9 @@ if (Object.keys(actByJourney).length && !runFailed) {
   }
 }
 if (process.env.GITHUB_OUTPUT) {
-  writeFileSync(process.env.GITHUB_OUTPUT, `repaired=${repaired ? 'true' : 'false'}\n`, { flag: 'a' });
+  writeFileSync(process.env.GITHUB_OUTPUT,
+    `repaired=${repaired ? 'true' : 'false'}\nstructural=${structuralPrepared.length ? 'true' : 'false'}\n`,
+    { flag: 'a' });
 }
 
 // ── outcomes needing a human: structural, ambiguous, B313 pattern breaks ──
