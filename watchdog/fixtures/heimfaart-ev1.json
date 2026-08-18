@@ -1,0 +1,50 @@
+{
+  "connections": [
+    {
+      "sections": [
+        {
+          "journey": { "category": "B", "number": "313", "operator": "VBD" },
+          "departure": { "station": { "id": "8587441", "name": "Davos Dischma, Teufi" }, "departure": "2026-09-28T16:20:00+0200", "platform": null },
+          "arrival": { "station": { "id": "8574848", "name": "Davos Dorf, Bahnhof" }, "arrival": "2026-09-28T16:32:00+0200" }
+        },
+        {
+          "journey": { "category": "EV", "number": "EV1", "operator": "RhB-EV" },
+          "departure": { "station": { "id": "8574848", "name": "Davos Dorf, Bahnhof" }, "departure": "2026-09-28T16:43:00+0200", "platform": null },
+          "arrival": { "station": { "id": "8575081", "name": "Küblis, Bahnhof" }, "arrival": "2026-09-28T17:12:00+0200" }
+        },
+        {
+          "journey": null,
+          "walk": { "duration": 60 },
+          "departure": { "station": { "id": "8575081", "name": "Küblis, Bahnhof" }, "departure": null },
+          "arrival": { "station": { "id": "8509064", "name": "Küblis" }, "arrival": null }
+        },
+        {
+          "journey": { "category": "RE", "number": "13", "operator": "RhB" },
+          "departure": { "station": { "id": "8509064", "name": "Küblis" }, "departure": "2026-09-28T17:18:00+0200", "platform": "1" },
+          "arrival": { "station": { "id": "8509002", "name": "Landquart" }, "arrival": "2026-09-28T17:39:00+0200" }
+        },
+        {
+          "journey": { "category": "ICE", "number": "000272", "operator": "SBB" },
+          "departure": { "station": { "id": "8509002", "name": "Landquart" }, "departure": "2026-09-28T17:48:00+0200", "platform": "3" },
+          "arrival": { "station": { "id": "8500010", "name": "Basel SBB" }, "arrival": "2026-09-28T19:52:00+0200" }
+        },
+        {
+          "journey": { "category": "IR", "number": "56", "operator": "BLS-bls" },
+          "departure": { "station": { "id": "8500010", "name": "Basel SBB" }, "departure": "2026-09-28T20:02:00+0200", "platform": "20" },
+          "arrival": { "station": { "id": "8500113", "name": "Laufen" }, "arrival": "2026-09-28T20:21:00+0200" }
+        },
+        {
+          "journey": null,
+          "walk": { "duration": 180 },
+          "departure": { "station": { "id": "8500113", "name": "Laufen" }, "departure": null },
+          "arrival": { "station": { "id": "8572113", "name": "Laufen, Bahnhof" }, "arrival": null }
+        },
+        {
+          "journey": { "category": "B", "number": "111", "operator": "PAG" },
+          "departure": { "station": { "id": "8572113", "name": "Laufen, Bahnhof" }, "departure": "2026-09-28T20:29:00+0200", "platform": "E" },
+          "arrival": { "station": { "id": "8500752", "name": "Breitenbach, Dorfplatz" }, "arrival": "2026-09-28T20:40:00+0200" }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "connections": [
+    {
+      "sections": [
+        {
+          "journey": { "category": "B", "number": "115", "operator": "PAG" },
+          "departure": { "station": { "id": "8500752", "name": "Breitenbach, Dorfplatz" }, "departure": "2026-09-26T05:12:00+0200", "platform": "B" },
+          "arrival": { "station": { "id": "8572180", "name": "Zwingen, Bahnhof" }, "arrival": "2026-09-26T05:19:00+0200" }
+        },
+        {
+          "journey": null,
+          "walk": { "duration": 120 },
+          "departure": { "station": { "id": "8572180", "name": "Zwingen, Bahnhof" }, "departure": null },
+          "arrival": { "station": { "id": "8500114", "name": "Zwingen" }, "arrival": null }
+        },
+        {
+          "journey": { "category": "S", "number": "3", "operator": "SBB" },
+          "departure": { "station": { "id": "8500114", "name": "Zwingen" }, "departure": "2026-09-26T05:24:00+0200", "platform": "4" },
+          "arrival": { "station": { "id": "8500010", "name": "Basel SBB" }, "arrival": "2026-09-26T05:49:00+0200" }
+        },
+        {
+          "journey": { "category": "IC", "number": "3", "operator": "SBB" },
+          "departure": { "station": { "id": "8500010", "name": "Basel SBB" }, "departure": "2026-09-26T06:06:00+0200", "platform": "9" },
+          "arrival": { "station": { "id": "8509000", "name": "Chur" }, "arrival": "2026-09-26T08:22:00+0200" }
+        },
+        {
+          "journey": { "category": "IR", "number": "38", "operator": "RhB" },
+          "departure": { "station": { "id": "8509000", "name": "Chur" }, "departure": "2026-09-26T08:58:00+0200", "platform": "10" },
+          "arrival": { "station": { "id": "8509199", "name": "Spinas" }, "arrival": "2026-09-26T10:37:00+0200" }
+        }
+      ]
+    }
+  ]
+}
