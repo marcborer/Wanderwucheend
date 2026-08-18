@@ -30,30 +30,40 @@ try {
 } catch {}
 
 // Tracking-issue comment (create + pin on first need)
+// The repair is already committed — notification failures must not crash this
+// step, only log (a dead notifier is bad; a red step on a repaired site is worse).
 let tracking = state.trackingIssue;
 if (!tracking) {
-  const out = gh(['issue', 'create', '--title', TRACKING_TITLE, '--body',
-    'Pinned tracking issue for the nightly Fahrplan-Watchdog. Every repair and (in the final week) every run comments here — GitHub does not notify on commits.']);
-  tracking = DRY ? 0 : +out.trim().split('/').pop();
-  if (tracking) { try { gh(['issue', 'pin', String(tracking)]); } catch {} }
-  state.trackingIssue = tracking;
-  writeFileSync(STATE_PATH, JSON.stringify(state, null, 2) + '\n');
+  try {
+    const out = gh(['issue', 'create', '--title', TRACKING_TITLE, '--body',
+      'Pinned tracking issue for the nightly Fahrplan-Watchdog. Every repair and (in the final week) every run comments here — GitHub does not notify on commits.']);
+    const n = parseInt(String(out).trim().split('/').pop(), 10);
+    tracking = DRY ? 0 : (Number.isFinite(n) ? n : null);
+    if (tracking) { try { gh(['issue', 'pin', String(tracking)]); } catch {} }
+    state.trackingIssue = tracking;
+    try { writeFileSync(STATE_PATH, JSON.stringify(state, null, 2) + '\n'); }
+    catch (e) { console.error('state save failed (continuing):', e.message); }
+  } catch (e) { console.error('tracking issue creation failed (continuing):', e.message); }
 }
 const announce = timeChanged
   ? '\n\n➡️ **Zitä hend gänderet — bitte de Gruppe im Chat Bscheid gäh!** (Scho importierti Kaländer aktualisiered sich nid vo sälber.)'
   : '';
 if (tracking != null) {
-  gh(['issue', 'comment', String(tracking), '--body',
-    `🔧 Reparatur committed und live:\n\n${summary}${announce}`]);
+  try {
+    gh(['issue', 'comment', String(tracking), '--body',
+      `🔧 Reparatur committed und live:\n\n${summary}${announce}`]);
+  } catch (e) { console.error('tracking comment failed (continuing):', e.message); }
 }
 
 // Consolidated share-link follow-up (R16)
 const journeys = [...new Set([...summary.matchAll(/^- (\w+) /gm)].map((m) => m[1]))];
 const linkNames = { hifaart: 'Hifaart-Card', tag2: 'Tag-2-Links (La Punt/Zuoz)', heimfaart: 'Heimfaart-Card' };
-gh(['issue', 'create', '--title', `🔗 SBB-Share-Links nöi generiere (${journeys.join(', ')})`, '--body',
-  `D'Reparatur het d'Fahrplan-Date aktualisiert, aber d'\`a.sbbmobile.ch\`-Share-Links chan nur du im SBB-App nöi mache:\n\n` +
-  journeys.map((j) => `- [ ] ${linkNames[j] ?? j}: Verbindig im SBB-App sueche → teile → Link in \`index.html\` ersetze und d'Markierig "Link wird no aktualisiert" entferne`).join('\n') +
-  `\n\nÄnderige:\n${summary}`]);
+try {
+  gh(['issue', 'create', '--title', `🔗 SBB-Share-Links nöi generiere (${journeys.join(', ')})`, '--body',
+    `D'Reparatur het d'Fahrplan-Date aktualisiert, aber d'\`a.sbbmobile.ch\`-Share-Links chan nur du im SBB-App nöi mache:\n\n` +
+    journeys.map((j) => `- [ ] ${linkNames[j] ?? j}: Verbindig im SBB-App sueche → teile → Link in \`index.html\` ersetze und d'Markierig "Link wird no aktualisiert" entferne`).join('\n') +
+    `\n\nÄnderige:\n${summary}`]);
+} catch (e) { console.error('share-link follow-up failed (continuing):', e.message); }
 
 rmSync(SUMMARY_PATH, { force: true });
 console.log('post-repair notifications done');

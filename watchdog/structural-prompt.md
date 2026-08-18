@@ -11,7 +11,31 @@ the card regions — so precision matters more than creativity.
 ## Inputs
 
 - `.structural-changes.json` — which journeys changed, with their new legs and
-  `durationMin` (already reflected in `connections.json`)
+  `durationMin` (already reflected in `connections.json`). Shape:
+
+  ```json
+  {
+    "items": [
+      {
+        "journey": "heimfaart",
+        "durationMin": 260,
+        "legs": [
+          {
+            "from": { "id": "8574848", "api": "Davos Dorf, Bahnhof", "display": "Tavau Dorf" },
+            "to": { "id": "8575081", "api": "Küblis, Bahnhof", "display": "Küblis" },
+            "dep": "16:43", "arr": "17:12",
+            "line": { "category": "EV", "number": "EV1", "display": "EV1", "badge": "ev" },
+            "platform": null,
+            "direction": "Küblis, Bahnhof"
+          }
+        ]
+      }
+    ]
+  }
+  ```
+
+  Only journeys listed here need card rewrites (journeys without a card, like
+  `tag2`, were already handled JSON-only and never appear in this file).
 - `connections.json` — the source of truth for every value you write
 - `index.html` — edit ONLY between `<!-- conn:<journey>:start -->` and
   `<!-- conn:<journey>:end -->` for the journeys listed in the changes file

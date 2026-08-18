@@ -96,6 +96,25 @@ test('AFTER: past-tense hero with day count', async () => {
   dom.window.close();
 });
 
+test('boundary instants: 25.9 23:59 BEFORE, 26.9 00:00 DURING, 29.9 00:00 AFTER', async () => {
+  const cases = [
+    ['?fake-date=2026-09-25T23:59', 'countdown'],
+    ['?fake-date=2026-09-26T00:00', 'huetPanel'],
+    ['?fake-date=2026-09-28T23:59', 'huetPanel'],
+    ['?fake-date=2026-09-29T00:00', 'afterPanel']
+  ];
+  for (const [query, visibleId] of cases) {
+    const { dom, errors } = loadPage(query);
+    await settle();
+    const d = dom.window.document;
+    for (const id of ['countdown', 'huetPanel', 'afterPanel']) {
+      assert.equal(shown(d.getElementById(id)), id === visibleId, `${query}: ${id}`);
+    }
+    assert.deepEqual(errors, []);
+    dom.window.close();
+  }
+});
+
 test('invalid fake-date falls back to real time without errors', async () => {
   const { dom, errors } = loadPage('?fake-date=nonsense');
   await settle();

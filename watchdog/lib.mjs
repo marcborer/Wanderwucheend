@@ -7,8 +7,10 @@ const clean = (s) =>
 
 export const toMin = (hm) => +hm.slice(0, 2) * 60 + +hm.slice(3, 5);
 
-export const journeyDurationMin = (j) =>
-  toMin(j.legs[j.legs.length - 1].arr) - toMin(j.legs[0].dep);
+export const journeyDurationMin = (j) => {
+  const d = toMin(j.legs[j.legs.length - 1].arr) - toMin(j.legs[0].dep);
+  return d < 0 ? d + 24 * 60 : d; // midnight-crossing journeys wrap, never go negative
+};
 
 // Badge CSS class per API line category; an unmapped category makes the diff
 // ambiguous (issue, not commit) — the repair checks membership here.
@@ -33,7 +35,8 @@ export function validateApiResponse(json) {
         return { ok: false, reason: 'leg-missing-fields' };
       }
       const dep = d.departure.slice(11, 16), arr = a.arrival.slice(11, 16);
-      if (!/^\d{2}:\d{2}$/.test(dep) || !/^\d{2}:\d{2}$/.test(arr)) return { ok: false, reason: 'bad-time' };
+      const timeOk = (t) => /^\d{2}:\d{2}$/.test(t) && +t.slice(0, 2) < 24 && +t.slice(3, 5) < 60;
+      if (!timeOk(dep) || !timeOk(arr)) return { ok: false, reason: 'bad-time' };
       legs.push({
         fromId: clean(String(d.station.id)),
         fromName: clean(d.station.name) ?? '',

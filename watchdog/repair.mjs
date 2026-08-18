@@ -17,16 +17,19 @@ export function lineDisplay(category, number) {
   return category === 'S' ? category + n : `${category} ${n}`;
 }
 
+const reEscape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 function setAnchorText(html, key, value) {
-  const re = new RegExp(`(data-conn="${key}"[^>]*>)[^<]*(<)`);
+  const re = new RegExp(`(data-conn="${reEscape(key)}"[^>]*>)[^<]*(<)`);
   if (!re.test(html)) throw new Error(`anchor not found: ${key}`);
-  return html.replace(re, `$1${value}$2`);
+  // callback replace: a value containing "$" must never act as a backreference
+  return html.replace(re, (_, a, b) => a + value + b);
 }
 
 function setBadgeClass(html, key, badge) {
-  const re = new RegExp(`(class="travel-line-badge )badge-[a-z0-9]+("[^>]*data-conn="${key}")`);
+  const re = new RegExp(`(class="travel-line-badge )badge-[a-z0-9]+("[^>]*data-conn="${reEscape(key)}")`);
   if (!re.test(html)) throw new Error(`badge anchor not found: ${key}`);
-  return html.replace(re, `$1badge-${badge}$2`);
+  return html.replace(re, (_, a, b) => a + 'badge-' + badge + b);
 }
 
 export function markShareLink(html, journeyKey) {

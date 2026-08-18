@@ -14,6 +14,7 @@ import { applyValueRepair, applyStructuralJson, syncDerived, markShareLink, Ambi
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const STATE_PATH = join(root, '.github', 'watchdog-state.json');
 const API = (process.env.WATCHDOG_API_BASE || 'https://transport.opendata.ch/v1').replace(/\/$/, '');
+if (!/^https:\/\//.test(API)) { console.error('WATCHDOG_API_BASE must be https:// — refusing', API); process.exit(1); }
 const DRY = process.env.WATCHDOG_DRY_RUN === '1';
 const TRACKING_TITLE = '🐕 Watchdog — Fahrplan-Überwachig';
 const BLIND_TITLE = '🙈 Watchdog isch blind — API-Probleme';
@@ -26,6 +27,13 @@ const todayZurich = () => zh.format(new Date()); // YYYY-MM-DD
 function gh(args, input) {
   if (DRY) { console.log('[dry-run] gh', args.join(' '), input ? `<<< ${input.slice(0, 120)}…` : ''); return ''; }
   return execFileSync('gh', args, { encoding: 'utf8', input });
+}
+
+// gh issue create prints the issue URL; anything unparseable must become null,
+// never NaN — a NaN in state would silently break dedupe on later runs.
+function issueNumberFrom(out) {
+  const n = parseInt(String(out).trim().split('/').pop(), 10);
+  return Number.isFinite(n) ? n : null;
 }
 
 function loadState() {
@@ -58,7 +66,7 @@ function ensureTrackingIssue(state) {
     const out = gh(['issue', 'create', '--title', TRACKING_TITLE, '--body',
       'Pinned tracking issue for the nightly Fahrplan-Watchdog. Every repair and (in the final week) every run comments here — GitHub does not notify on commits.'],
     );
-    n = DRY ? 0 : +out.trim().split('/').pop();
+    n = DRY ? 0 : issueNumberFrom(out);
     if (n) { try { gh(['issue', 'pin', String(n)]); } catch { console.error('pinning failed (non-fatal)'); } }
   }
   state.trackingIssue = n;
@@ -68,7 +76,8 @@ function ensureTrackingIssue(state) {
 async function fetchConnections(journey) {
   const legs = journey.legs;
   const dep = legs[0].dep;
-  const time = `${String(Math.max(0, Math.floor((toMin(dep) - 15) / 60))).padStart(2, '0')}:${String((toMin(dep) - 15) % 60).padStart(2, '0')}`;
+  const t = Math.max(0, toMin(dep) - 15); // clamp: pre-00:15 departures must not go negative
+  const time = `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
   const url = `${API}/connections?from=${legs[0].from.id}&to=${legs[legs.length - 1].to.id}&date=${journey.date}&time=${time}&limit=6`;
   const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
   if (!res.ok) throw new Error(`http ${res.status}`);
@@ -109,7 +118,7 @@ const { state, corrupt } = loadState();
 const conn = JSON.parse(readFileSync(join(root, 'connections.json'), 'utf8'));
 
 let runFailed = corrupt;
-const report = { held: [], ambiguous: [], structural: [], b313Missing: [], errors: [] };
+const report = { held: [], ambiguous: [], b313Missing: [], errors: [] };
 const actByJourney = {};
 const structuralByJourney = {};
 
@@ -124,6 +133,9 @@ for (const [key, journey] of Object.entries(conn.journeys)) {
     if (d.kind === 'structural') {
       structuralByJourney[key] = m.candidate.legs;
     } else if (d.kind === 'value') {
+      // Partial-state note: pending updates land per journey as the loop runs; a
+      // later journey failing leaves earlier journeys' debounce state current and
+      // the failed one's stale — correct, since the failed journey was not observed.
       const { act, hold, pending } = applyDebounce(state, key, d.changes, today, journey.date);
       state.pending = pending;
       if (act.length) actByJourney[key] = act;
@@ -159,8 +171,14 @@ if ((Object.keys(actByJourney).length || Object.keys(structuralByJourney).length
     for (const [key, candidateLegs] of Object.entries(structuralByJourney)) {
       const newLegs = applyStructuralJson(working.conn, key, candidateLegs);
       working.html = markShareLink(working.html, key);
-      structuralPrepared.push({ journey: key, legs: newLegs, durationMin: working.conn.journeys[key].durationMin });
-      summaryParts.push(`- ${key}: Streckestruktur nöi (${conn.journeys[key].legs.length} → ${newLegs.length} Legs) — Card-Text schriibt d'KI, s'Gate prüeft`);
+      // Only journeys with a card region need the AI rewrite; tag2 is JSON-only
+      // (no card exists — the Hüt hero renders it straight from connections.json).
+      if (working.html.includes(`conn:${key}:start`)) {
+        structuralPrepared.push({ journey: key, legs: newLegs, durationMin: working.conn.journeys[key].durationMin });
+        summaryParts.push(`- ${key}: Streckestruktur nöi (${conn.journeys[key].legs.length} → ${newLegs.length} Legs) — Card-Text schriibt d'KI, s'Gate prüeft`);
+      } else {
+        summaryParts.push(`- ${key}: Streckestruktur nöi (${conn.journeys[key].legs.length} → ${newLegs.length} Legs) — nur JSON, kei Card`);
+      }
     }
     if (Object.keys(actByJourney).length) {
       const r = applyValueRepair(working, actByJourney);
@@ -190,8 +208,8 @@ if (process.env.GITHUB_OUTPUT) {
     { flag: 'a' });
 }
 
-// ── outcomes needing a human: structural, ambiguous, B313 pattern breaks ──
-const hasFindings = report.structural.length || report.ambiguous.length || report.b313Missing.length;
+// ── outcomes needing a human: ambiguous cases, B313 pattern breaks ──
+const hasFindings = report.ambiguous.length || report.b313Missing.length;
 
 if (runFailed) {
   state.failures += 1;
@@ -199,7 +217,7 @@ if (runFailed) {
   if (state.failures >= 2 && !state.blindIssue) {
     const body = `Zwei Nächt hintrenand kei brauchbari Antwort vo transport.opendata.ch.\n\nLetschti Fähler:\n${report.errors.map((e) => '- ' + e).join('\n')}\n\nDe Watchdog gseht im Momänt nüt — Fahrplan-Änderige blibed unentdeckt!`;
     const out = gh(['issue', 'create', '--title', BLIND_TITLE, '--body', body]);
-    state.blindIssue = DRY ? 0 : +out.trim().split('/').pop();
+    state.blindIssue = DRY ? 0 : issueNumberFrom(out);
   }
 } else {
   state.failures = 0;
@@ -214,8 +232,7 @@ if (runFailed) {
 
 if (hasFindings) {
   const sections = [];
-  if (report.structural.length) sections.push('## ⚠️ Strukturelli Änderige\n' + report.structural.join('\n') + '\n\nDie bruuched (no) e Hand: `connections.json`, d\'Travel-Cards und d\'Share-Links aapasse.');
-  if (report.ambiguous.length) sections.push('## Unklar (kei eideutigi Verbindig gfonde)\n' + report.ambiguous.map((a) => '- ' + a).join('\n'));
+  if (report.ambiguous.length) sections.push('## Unklar (kei eideutigi Verbindig gfonde — bruucht e Hand)\n' + report.ambiguous.map((a) => '- ' + a).join('\n'));
   if (report.b313Missing.length) sections.push('## B313-Muster\nFähledi :20er-Abfahrte ab Teufi: ' + report.b313Missing.join(', '));
   sections.push('\n**Checklischte:** `connections.json` aapasse → Cards folged (CI-Re-Diff prüeft) → Countdown/.ics bi Zitänderige → SBB-Share-Links im SBB-App nöi generiere.');
   const body = sections.join('\n\n');
@@ -224,7 +241,7 @@ if (hasFindings) {
     console.log('identical findings already reported in issue #' + state.lastDiffIssue);
   } else {
     const out = gh(['issue', 'create', '--title', `🚆 Fahrplan-Änderig entdeckt (${today})`, '--body', body]);
-    state.lastDiffIssue = DRY ? 0 : +out.trim().split('/').pop();
+    state.lastDiffIssue = DRY ? 0 : issueNumberFrom(out);
     state.lastIssueHash = hash;
   }
 }
