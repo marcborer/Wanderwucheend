@@ -1,0 +1,19 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Wanderwucheend//NONSGML v1.0//EN
+BEGIN:VEVENT
+UID:wanderwucheend-2026@wanderweekend.marc-borer.ch
+DTSTAMP:20260818T120000Z
+DTSTART;TZID=Europe/Zurich:20260926T051200
+DTEND;TZID=Europe/Zurich:20260928T204000
+SUMMARY:Wanderwucheend 2026 — Engadin & Tavau
+LOCATION:Graubünden, Schweiz
+DESCRIPTION:3 Täg, 30 km, 2 Nacht in de Alpe.
+
+Route: Spinas → La Punt → Grialetsch-Hütta → Tavau Dischma
+Nacht 1: Chesa Dimena, La Punt (B&B)
+Nacht 2: Chamanna da Grialetsch CAS (Halbpension)
+
+Abfahrt: 05:12 ab Breitenbach
+END:VEVENT
+END:VCALENDAR

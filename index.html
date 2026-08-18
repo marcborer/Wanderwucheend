@@ -945,7 +945,7 @@
         <div class="countdown-item"><div class="countdown-val" id="cd-mins">--</div><div class="countdown-lbl">Min</div></div>
         <div class="countdown-item"><div class="countdown-val" id="cd-secs">--</div><div class="countdown-lbl">Sek</div></div>
       </div>
-      <a class="cal-link" id="calLink" download="wanderwucheend-2026.ics">📅 Zum Kaländer hinzuefüge</a>
+      <a class="cal-link" id="calLink" href="wanderwucheend-2026.ics" download="wanderwucheend-2026.ics">📅 Zum Kaländer hinzuefüge</a>
     </div>
   </div>
 
@@ -1083,58 +1083,61 @@
     <!-- VERBINDIG -->
     <div class="travel-section">
 
+      <!-- conn:hifaart:start -->
       <div class="travel-card anim-fadeUp">
         <div class="travel-card-header">🚆 Hifaart — Sa. 26. September</div>
         <div class="travel-card-body">
           <div class="travel-leg">
-            <div class="travel-time">05:12</div>
+            <div class="travel-time" data-conn="hifaart.0.dep">05:12</div>
             <div class="travel-desc"><div class="t-from">Breitenbach, Dorfplatz</div></div>
           </div>
           <div class="travel-leg">
             <div class="travel-time"></div>
-            <span class="travel-line-badge badge-bus">B 115</span>
+            <span class="travel-line-badge badge-bus" data-conn="hifaart.0.line">B 115</span>
             <div class="travel-desc"><div class="t-to">→ Zwinge, Bhf</div></div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">05:24</div>
-            <span class="travel-line-badge badge-s3">S3</span>
+            <div class="travel-time" data-conn="hifaart.1.dep">05:24</div>
+            <span class="travel-line-badge badge-s3" data-conn="hifaart.1.line">S3</span>
             <div class="travel-desc">
               <div class="t-from">Zwinge → Basel SBB</div>
-              <div class="t-to">Gleis 4, Richtig Olte</div>
+              <div class="t-to"><span data-conn="hifaart.1.platform" data-conn-prefix="Gleis ">Gleis 4</span>, Richtig Olte</div>
             </div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">06:06</div>
-            <span class="travel-line-badge badge-ic">IC 3</span>
+            <div class="travel-time" data-conn="hifaart.2.dep">06:06</div>
+            <span class="travel-line-badge badge-ic" data-conn="hifaart.2.line">IC 3</span>
             <div class="travel-desc">
               <div class="t-from">Basel SBB → Cuira</div>
-              <div class="t-to">Gleis 9, Richtig Cuira</div>
+              <div class="t-to"><span data-conn="hifaart.2.platform" data-conn-prefix="Gleis ">Gleis 9</span>, Richtig Cuira</div>
             </div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">08:58</div>
-            <span class="travel-line-badge badge-re">IR 38</span>
+            <div class="travel-time" data-conn="hifaart.3.dep">08:58</div>
+            <span class="travel-line-badge badge-re" data-conn="hifaart.3.line">IR 38</span>
             <div class="travel-desc">
               <div class="t-from">Cuira → Spinas</div>
-              <div class="t-to">Gleis 10, Richtig San Murezzan</div>
+              <div class="t-to"><span data-conn="hifaart.3.platform" data-conn-prefix="Gleis ">Gleis 10</span>, Richtig San Murezzan</div>
             </div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">10:37</div>
+            <div class="travel-time" data-conn="hifaart.3.arr">10:37</div>
             <div class="travel-desc">
               <div class="t-from">🏁 Spinas — Los goot's!</div>
-              <div class="t-to">Faarzit total: 5 Std. 25 Min.</div>
+              <div class="t-to">Faarzit total: <span data-conn="hifaart.durationText">5 Std. 25 Min.</span></div>
             </div>
           </div>
         </div>
         <a class="sbb-link" href="https://a.sbbmobile.ch/s/o2gDUXjI" target="_blank" rel="noopener">In SBB App uufmache</a>
       </div>
+      <!-- conn:hifaart:end -->
 
+      <!-- conn:heimfaart:start -->
       <div class="travel-card anim-fadeUp" style="transition-delay:0.12s">
         <div class="travel-card-header">🏠 Heimfaart — Mo. 28. September</div>
         <div class="travel-card-body">
           <div class="travel-leg">
-            <div class="travel-time">16:20</div>
+            <div class="travel-time" data-conn="heimfaart.0.dep">16:20</div>
             <div class="travel-desc">
               <div class="t-from">Teufi, Tavau Dischma</div>
               <div class="t-to">Bus jeda Stond um :20</div>
@@ -1142,59 +1145,60 @@
           </div>
           <div class="travel-leg">
             <div class="travel-time"></div>
-            <span class="travel-line-badge badge-bus">B 313</span>
+            <span class="travel-line-badge badge-bus" data-conn="heimfaart.0.line">B 313</span>
             <div class="travel-desc"><div class="t-to">→ Tavau Dorf, Bhf</div></div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">16:43</div>
-            <span class="travel-line-badge badge-ev">EV1</span>
+            <div class="travel-time" data-conn="heimfaart.1.dep">16:43</div>
+            <span class="travel-line-badge badge-ev" data-conn="heimfaart.1.line">EV1</span>
             <div class="travel-desc">
               <div class="t-from">Tavau Dorf → Küblis</div>
               <div class="t-to">Ersatzbus, Richtig Küblis</div>
             </div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">17:18</div>
-            <span class="travel-line-badge badge-re">RE 13</span>
+            <div class="travel-time" data-conn="heimfaart.2.dep">17:18</div>
+            <span class="travel-line-badge badge-re" data-conn="heimfaart.2.line">RE 13</span>
             <div class="travel-desc">
               <div class="t-from">Küblis → Landquart</div>
-              <div class="t-to">Gleis 1, Richtig Landquart</div>
+              <div class="t-to"><span data-conn="heimfaart.2.platform" data-conn-prefix="Gleis ">Gleis 1</span>, Richtig Landquart</div>
             </div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">17:48</div>
-            <span class="travel-line-badge badge-ic">ICE</span>
+            <div class="travel-time" data-conn="heimfaart.3.dep">17:48</div>
+            <span class="travel-line-badge badge-ic" data-conn="heimfaart.3.line">ICE</span>
             <div class="travel-desc">
               <div class="t-from">Landquart → Basel SBB</div>
-              <div class="t-to">Gleis 3, Richtig Frankfurt</div>
+              <div class="t-to"><span data-conn="heimfaart.3.platform" data-conn-prefix="Gleis ">Gleis 3</span>, Richtig Frankfurt</div>
             </div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">20:02</div>
-            <span class="travel-line-badge badge-re">IR 56</span>
+            <div class="travel-time" data-conn="heimfaart.4.dep">20:02</div>
+            <span class="travel-line-badge badge-re" data-conn="heimfaart.4.line">IR 56</span>
             <div class="travel-desc">
               <div class="t-from">Basel SBB → Loufe</div>
-              <div class="t-to">Gleis 20, Richtig Biel</div>
+              <div class="t-to"><span data-conn="heimfaart.4.platform" data-conn-prefix="Gleis ">Gleis 20</span>, Richtig Biel</div>
             </div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">20:29</div>
-            <span class="travel-line-badge badge-bus">B 111</span>
+            <div class="travel-time" data-conn="heimfaart.5.dep">20:29</div>
+            <span class="travel-line-badge badge-bus" data-conn="heimfaart.5.line">B 111</span>
             <div class="travel-desc">
               <div class="t-from">Loufe Bhf → Breitenbach</div>
-              <div class="t-to">Kante E, Richtig Nuninge</div>
+              <div class="t-to"><span data-conn="heimfaart.5.platform" data-conn-prefix="Kante ">Kante E</span>, Richtig Nuninge</div>
             </div>
           </div>
           <div class="travel-leg">
-            <div class="travel-time">20:40</div>
+            <div class="travel-time" data-conn="heimfaart.5.arr">20:40</div>
             <div class="travel-desc">
               <div class="t-from">🏁 Breitenbach, Dorfplatz</div>
-              <div class="t-to">Faarzit total: 4 Std. 20 Min.</div>
+              <div class="t-to">Faarzit total: <span data-conn="heimfaart.durationText">4 Std. 20 Min.</span></div>
             </div>
           </div>
         </div>
         <a class="sbb-link" href="https://a.sbbmobile.ch/s/NO6Vq5mn" target="_blank" rel="noopener">In SBB App uufmache</a>
       </div>
+      <!-- conn:heimfaart:end -->
 
     </div>
 
@@ -1340,7 +1344,7 @@
       progressBar.style.width = progress + '%';
     }, { passive: true });
 
-    // Countdown to 26 September 2026, 05:12 (departure time)
+    // conn:countdown-target — Abfahrt ab Breitenbach (repaired by the watchdog)
     var target = new Date('2026-09-26T05:12:00+02:00').getTime();
     function updateCountdown() {
       var now = Date.now();
@@ -1361,25 +1365,7 @@
     updateCountdown();
     setInterval(updateCountdown, 1000);
 
-    // Calendar .ics download
-    var icsContent = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//Wanderwucheend//NONSGML v1.0//EN',
-      'BEGIN:VEVENT',
-      'DTSTART;TZID=Europe/Zurich:20260926T051200',
-      'DTEND;TZID=Europe/Zurich:20260928T204000',
-      'SUMMARY:Wanderwucheend 2026 — Engadin & Tavau',
-      'LOCATION:Graubünden\\, Schweiz',
-      'DESCRIPTION:3 Täg\\, 30 km\\, 2 Nacht in de Alpe.\\n\\n' +
-        'Route: Spinas → La Punt → Grialetsch-Hütta → Tavau Dischma\\n' +
-        'Nacht 1: Chesa Dimena\\, La Punt (B&B)\\n' +
-        'Nacht 2: Chamanna da Grialetsch CAS (Halbpension)\\n\\n' +
-        'Abfahrt: 05:12 ab Breitenbach',
-      'END:VEVENT',
-      'END:VCALENDAR'
-    ].join('\r\n');
-    document.getElementById('calLink').href = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(icsContent);
+    // Calendar: served as static file wanderwucheend-2026.ics (repaired by the watchdog)
 
     // Interactive packing checklist with localStorage persistence
     var packItems = document.querySelectorAll('.pack-item');

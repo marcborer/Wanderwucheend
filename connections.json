@@ -1,0 +1,135 @@
+{
+  "meta": {
+    "version": 1,
+    "verified": "2026-08-18",
+    "source": "transport.opendata.ch",
+    "sbbLinkTemplate": "https://www.sbb.ch/en?von={von}&nach={nach}&datum={datum}&zeit={zeit}",
+    "tripStart": "2026-09-26",
+    "tripEnd": "2026-09-28"
+  },
+  "journeys": {
+    "hifaart": {
+      "date": "2026-09-26",
+      "durationMin": 325,
+      "legs": [
+        {
+          "from": { "id": "8500752", "api": "Breitenbach, Dorfplatz", "display": "Breitenbach, Dorfplatz" },
+          "to": { "id": "8572180", "api": "Zwingen, Bahnhof", "display": "Zwinge, Bhf" },
+          "dep": "05:12", "arr": "05:19",
+          "line": { "category": "B", "number": "115", "display": "B 115", "badge": "bus" },
+          "platform": "B",
+          "direction": "Zwingen, Bahnhof"
+        },
+        {
+          "from": { "id": "8500114", "api": "Zwingen", "display": "Zwinge" },
+          "to": { "id": "8500010", "api": "Basel SBB", "display": "Basel SBB" },
+          "dep": "05:24", "arr": "05:49",
+          "line": { "category": "S", "number": "3", "display": "S3", "badge": "s3" },
+          "platform": "4",
+          "direction": "Olten"
+        },
+        {
+          "from": { "id": "8500010", "api": "Basel SBB", "display": "Basel SBB" },
+          "to": { "id": "8509000", "api": "Chur", "display": "Cuira" },
+          "dep": "06:06", "arr": "08:22",
+          "line": { "category": "IC", "number": "3", "display": "IC 3", "badge": "ic" },
+          "platform": "9",
+          "direction": "Chur"
+        },
+        {
+          "from": { "id": "8509000", "api": "Chur", "display": "Cuira" },
+          "to": { "id": "8509199", "api": "Spinas", "display": "Spinas" },
+          "dep": "08:58", "arr": "10:37",
+          "line": { "category": "IR", "number": "38", "display": "IR 38", "badge": "re" },
+          "platform": "10",
+          "direction": "St. Moritz"
+        }
+      ]
+    },
+    "tag2": {
+      "date": "2026-09-27",
+      "durationMin": 50,
+      "legs": [
+        {
+          "from": { "id": "8509256", "api": "La Punt Chamues-ch", "display": "La Punt Chamues-ch" },
+          "to": { "id": "8509263", "api": "Susch", "display": "Susch" },
+          "dep": "11:23", "arr": "11:59",
+          "line": { "category": "R", "number": "15", "display": "R 15", "badge": "re" },
+          "platform": null,
+          "direction": "Scuol-Tarasp"
+        },
+        {
+          "from": { "id": "8574851", "api": "Susch, staziun", "display": "Susch, Staziun" },
+          "to": { "id": "8509715", "api": "Susch, Röven", "display": "Röve" },
+          "dep": "12:03", "arr": "12:13",
+          "line": { "category": "B", "number": "331", "display": "B 331", "badge": "bus" },
+          "platform": null,
+          "direction": "Davos Dorf, Bahnhof"
+        }
+      ]
+    },
+    "heimfaart": {
+      "date": "2026-09-28",
+      "durationMin": 260,
+      "legs": [
+        {
+          "from": { "id": "8587441", "api": "Davos Dischma, Teufi", "display": "Teufi, Tavau Dischma" },
+          "to": { "id": "8574848", "api": "Davos Dorf, Bahnhof", "display": "Tavau Dorf, Bhf" },
+          "dep": "16:20", "arr": "16:32",
+          "line": { "category": "B", "number": "313", "display": "B 313", "badge": "bus" },
+          "platform": null,
+          "direction": "Davos Dorf, Bahnhof"
+        },
+        {
+          "from": { "id": "8574848", "api": "Davos Dorf, Bahnhof", "display": "Tavau Dorf" },
+          "to": { "id": "8575081", "api": "Küblis, Bahnhof", "display": "Küblis" },
+          "dep": "16:43", "arr": "17:12",
+          "line": { "category": "EV", "number": "EV1", "display": "EV1", "badge": "ev" },
+          "platform": null,
+          "direction": "Küblis, Bahnhof"
+        },
+        {
+          "from": { "id": "8509064", "api": "Küblis", "display": "Küblis" },
+          "to": { "id": "8509002", "api": "Landquart", "display": "Landquart" },
+          "dep": "17:18", "arr": "17:39",
+          "line": { "category": "RE", "number": "13", "display": "RE 13", "badge": "re" },
+          "platform": "1",
+          "direction": "Landquart"
+        },
+        {
+          "from": { "id": "8509002", "api": "Landquart", "display": "Landquart" },
+          "to": { "id": "8500010", "api": "Basel SBB", "display": "Basel SBB" },
+          "dep": "17:48", "arr": "19:52",
+          "line": { "category": "ICE", "number": null, "display": "ICE", "badge": "ic" },
+          "platform": "3",
+          "direction": "Frankfurt (Main) Hbf"
+        },
+        {
+          "from": { "id": "8500010", "api": "Basel SBB", "display": "Basel SBB" },
+          "to": { "id": "8500113", "api": "Laufen", "display": "Loufe" },
+          "dep": "20:02", "arr": "20:21",
+          "line": { "category": "IR", "number": "56", "display": "IR 56", "badge": "re" },
+          "platform": "20",
+          "direction": "Biel/Bienne"
+        },
+        {
+          "from": { "id": "8572113", "api": "Laufen, Bahnhof", "display": "Loufe Bhf" },
+          "to": { "id": "8500752", "api": "Breitenbach, Dorfplatz", "display": "Breitenbach, Dorfplatz" },
+          "dep": "20:29", "arr": "20:40",
+          "line": { "category": "B", "number": "111", "display": "B 111", "badge": "bus" },
+          "platform": "E",
+          "direction": "Nunningen, Post"
+        }
+      ]
+    }
+  },
+  "b313": {
+    "date": "2026-09-28",
+    "pattern": ":20",
+    "from": { "id": "8587441", "api": "Davos Dischma, Teufi", "display": "Teufi" },
+    "to": { "id": "8574848", "api": "Davos Dorf, Bahnhof", "display": "Tavau Dorf, Bhf" },
+    "rideMin": 12,
+    "departures": ["13:20", "14:20", "15:20", "16:20", "17:20", "18:20"],
+    "apiVerified": ["16:20", "17:20", "18:20"]
+  }
+}
